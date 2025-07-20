@@ -1,20 +1,30 @@
-name: Build
+name: Build Aseprite
 
 on: [push]
 
 jobs:
   build:
     runs-on: windows-latest
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build (Release)
+      - name: Install dependencies
         run: |
-          # Your build commands here (e.g., MSBuild, dotnet build, etc.)
-          echo "Building in Release mode..."
+          choco install cmake
+          # 其他依赖（如 Visual Studio 工具链）
 
-      - name: Upload artifact
+      - name: Configure and Build
+        run: |
+          mkdir build && cd build
+          cmake -DCMAKE_BUILD_TYPE=Release ..
+          cmake --build . --config Release
+
+      - name: List build output (调试用)
+        run: dir .\build\bin\Release\
+
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-build
-          path: ./aseprite.exe
+          name: aseprite-windows
+          path: ./build/bin/Release/aseprite.exe  # 根据实际路径调整
