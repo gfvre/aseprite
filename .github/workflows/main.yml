@@ -17,4 +17,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: release-build
-          path: ./bin/Release/
+          path: ./aseprite/Release/
