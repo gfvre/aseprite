@@ -44,7 +44,18 @@ jobs:
         curl -L https://github.com/blueloveTH/aseprite/releases/download/v0.01/skia.zip --output skia.zip
         curl -L https://github.com/blueloveTH/aseprite/releases/download/v0.01/libcrypto-1_1-x64.so --output libcrypto-1_1-x64.so
         7z x skia.zip
-
+         cd skia
+        python3 tools/git-sync-deps
+        
+        # Build Skia
+        bin/gn gen out/Release --args='is_official_build=true is_debug=false skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false'
+        ninja -C out/Release skia
+        
+        # Copy the built library to expected location
+        mkdir -p ../skia/out/Release
+        cp out/Release/libskia.a ../skia/out/Release/
+        cd ..
+        
         # Or use prebuilt Linux Skia (if you have your own)
         # curl -L https://your-correct-skia-linux-url --output skia-linux.tar.gz
         # tar -xzf skia-linux.tar.gz
