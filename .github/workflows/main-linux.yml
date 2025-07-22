@@ -2,83 +2,50 @@ name: build-linux
 on: [push, pull_request]
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [Debian-latest]
         build_type: [Release]
         enable_ui: [on]
+        include:
+          - os: Debian-latest
+            build_type: Release
+            enable_ui: on
     steps:
     - uses: actions/checkout@v4
       with:
         submodules: 'recursive'
-    
-    - name: Set up ccache
+    - name: ccache
       uses: hendrikmuhs/ccache-action@v1
-      with:
-        key: linux-${{ matrix.build_type }}-${{ matrix.enable_ui }}
     
     - uses: seanmiddleditch/gha-setup-ninja@master
-    
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          libx11-dev \
-          libxcursor-dev \
-          libxi-dev \
-          libgl1-mesa-dev \
-          libfontconfig1-dev \
-          libssl-dev \
-          curl \
-          tar
-        
-    - name: Download and extract Skia
-      shell: bash
-      run: |
-        # Alternative Skia source (official build)
-        #SKIA_VERSION=chrome/m102
-        #curl -L https://github.com/google/skia-build/archive/refs/tags/${SKIA_VERSION}.tar.gz -o skia.tar.gz
-        #tar -xzf skia.tar.gz
-        #mv skia-build-${SKIA_VERSION//\//-} skia
-        curl -L https://github.com/blueloveTH/aseprite/releases/download/v0.01/skia.zip --output skia.zip
-        curl -L https://github.com/blueloveTH/aseprite/releases/download/v0.01/libcrypto-1_1-x64.so --output libcrypto-1_1-x64.so
-        7z x skia.zip
-         cd skia
-        python3 tools/git-sync-deps
-        
-        # Build Skia
-        bin/gn gen out/Release --args='is_official_build=true is_debug=false skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false'
-        ninja -C out/Release skia
-        
-        # Copy the built library to expected location
-        mkdir -p ../skia/out/Release
-        cp out/Release/libskia.a ../skia/out/Release/
-        cd ..
-        
-        # Or use prebuilt Linux Skia (if you have your own)
-        # curl -L https://your-correct-skia-linux-url --output skia-linux.tar.gz
-        # tar -xzf skia-linux.tar.gz
-        
+    - uses: ilammy/msvc-dev-cmd@v1
+      
     - name: Generating Makefiles
       shell: bash
       run: |
+        export enable_ccache=off
+        curl -L https://github.com/blueloveTH/aseprite/releases/download/v0.01/skia.zip --output skia.zip
+        curl -L https://github.com/blueloveTH/aseprite/releases/download/v0.01/libcrypto-1_1-x64.so --output libcrypto-1_1-x64.so
+        7z x skia.zip
         cmake -S . -B build -G Ninja \
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
           -DENABLE_UI=${{ matrix.enable_ui }} \
+          -DENABLE_CCACHE=$enable_ccache \
           -DLAF_BACKEND=skia \
           -DSKIA_DIR=./skia \
-          -DSKIA_LIBRARY_DIR=./skia/out/Release \
-          -DSKIA_LIBRARY=./skia/out/Release/libskia.a
-        
+          -DSKIA_LIBRARY_DIR=./skia/out/Release-x64 \
+          -DSKIA_LIBRARY=./skia/out/Release-x64/skia.so
     - name: Compiling
       shell: bash
       run: |
         cd build && ninja
-        
     - uses: actions/upload-artifact@v4
       with:
-        name: aseprite-linux
+        name: aseprite
         path: |
+          
           ./build/bin/data
           ./build/bin/aseprite
