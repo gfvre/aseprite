@@ -37,11 +37,14 @@ jobs:
       shell: bash
       run: |
         # Alternative Skia source (official build)
-        SKIA_VERSION=chrome/m102
-        curl -L https://github.com/google/skia-build/archive/refs/tags/${SKIA_VERSION}.tar.gz -o skia.tar.gz
-        tar -xzf skia.tar.gz
-        mv skia-build-${SKIA_VERSION//\//-} skia
-        
+        #SKIA_VERSION=chrome/m102
+        #curl -L https://github.com/google/skia-build/archive/refs/tags/${SKIA_VERSION}.tar.gz -o skia.tar.gz
+        #tar -xzf skia.tar.gz
+        #mv skia-build-${SKIA_VERSION//\//-} skia
+        curl -L https://github.com/blueloveTH/aseprite/releases/download/v0.01/skia.zip --output skia.zip
+        curl -L https://github.com/blueloveTH/aseprite/releases/download/v0.01/libcrypto-1_1-x64.so --output libcrypto-1_1-x64.so
+        7z x skia.zip
+
         # Or use prebuilt Linux Skia (if you have your own)
         # curl -L https://your-correct-skia-linux-url --output skia-linux.tar.gz
         # tar -xzf skia-linux.tar.gz
